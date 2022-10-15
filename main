@@ -1,0 +1,263 @@
+local getgenv, ipairs, typeof = getgenv, ipairs, typeof
+if getgenv().Aiming then
+	return getgenv().Aiming
+end
+local a = game:GetService("Players")
+local b = game:GetService("Workspace")
+local c = game:GetService("GuiService")
+local d = game:GetService("RunService")
+local e = d.Heartbeat
+local f = a.LocalPlayer
+local g = b.CurrentCamera
+local h = f:GetMouse()
+local i = Drawing.new
+local j = Color3.fromRGB
+local k = Vector2.new
+local l = c.GetGuiInset
+local m = Random.new
+local n = math.floor
+local o = f.CharacterAdded
+local p = o.Wait
+local q = g.WorldToViewportPoint
+local r = RaycastParams.new
+local s = Enum.RaycastFilterType.Blacklist
+local t = b.Raycast
+local u = a.GetPlayers
+local v = Instance.new
+local w = v("Part").IsDescendantOf
+local x = v("Part").FindFirstChildWhichIsA
+local y = v("Part").FindFirstChild
+local z = table.remove
+local A = table.insert
+getgenv().Aiming = {
+	Enabled = true,
+	ShowFOV = false,
+	FOV = 119,
+	FOVSides = 300,
+	FOVColour = j(255, 0, 0),
+	VisibleCheck = true,
+	HitChance = 110,
+	Selected = nil,
+	SelectedPart = nil,
+	TargetPart = {"Head", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "HumanoidRootPart", "LeftUpperLeg", "RightLowerLeg", "RightFoot", "LowerTorso"}
+	Ignored = {Teams = {{Team = f.Team, TeamColor = f.TeamColor}}, Players = {f, 91318356}}
+}
+local B = getgenv().Aiming
+local C = i("Circle")
+C.Transparency = 1
+C.Thickness = 2
+C.Color = B.FOVColour
+C.Filled = false
+B.FOVCircle = C
+function B.UpdateFOV()
+	if not C then
+		return
+	end
+	C.Visible = B.ShowFOV
+	C.Radius = B.FOV * 3
+	C.Position = k(h.X, h.Y + l(c).Y)
+	C.NumSides = B.FOVSides
+	C.Color = B.FOVColour
+	return C
+end
+local D = function(E)
+E = n(E)
+local F = n(m().NextNumber(m(), 0, 1) * 100) / 100
+return F <= E / 100
+end
+function B.IsPartVisible(G, H)
+local I = f.Character or p(o)
+local J = g.CFrame.Position
+local K, L = q(g, G.Position)
+if L then
+	local M = r()
+	M.FilterType = s
+	M.FilterDescendantsInstances = {I, g}
+	local N = t(b, J, G.Position - J, M)
+	if N then
+		local O = N.Instance
+		local P = not O or w(O, H)
+		return P
+	end
+end
+return false
+end
+function B.IgnorePlayer(Q)
+local R = B.Ignored
+local S = R.Players
+for K, T in ipairs(S) do
+	if T == Q then
+		return false
+	end
+end
+A(S, Q)
+return true
+end
+function B.UnIgnorePlayer(Q)
+local R = B.Ignored
+local S = R.Players
+for U, T in ipairs(S) do
+	if T == Q then
+		z(S, U)
+		return true
+	end
+end
+return false
+end
+function B.IgnoreTeam(V, W)
+local R = B.Ignored
+local X = R.Teams
+for K, Y in ipairs(X) do
+	if Y.Team == V and Y.TeamColor == W then
+		return false
+	end
+end
+A(X, {V, W})
+return true
+end
+function B.UnIgnoreTeam(V, W)
+local R = B.Ignored
+local X = R.Teams
+for U, Y in ipairs(X) do
+	if Y.Team == V and Y.TeamColor == W then
+		z(X, U)
+		return true
+	end
+end
+return false
+end
+function B.TeamCheck(Z)
+if Z then
+	return B.IgnoreTeam(f.Team, f.TeamColor)
+end
+return B.UnIgnoreTeam(f.Team, f.TeamColor)
+end
+function B.IsIgnoredTeam(Q)
+local R = B.Ignored
+local X = R.Teams
+for K, Y in ipairs(X) do
+	if Q.Team == Y.Team and Q.TeamColor == Y.TeamColor then
+		return true
+	end
+end
+return false
+end
+function B.IsIgnored(Q)
+local R = B.Ignored
+local S = R.Players
+for K, T in ipairs(S) do
+	if typeof(T) == "number" and Q.UserId == T then
+		return true
+	end
+	if T == Q then
+		return true
+	end
+end
+return B.IsIgnoredTeam(Q)
+end
+function B.Raycast(J, _, a0)
+if typeof(J) == "Vector3" and typeof(_) == "Vector3" then
+	if not a0 then
+		a0 = 1
+	end
+	local a1 = (_ - J).Unit * a0
+	local N = t(b, J, a1)
+	if N then
+		local a2 = N.Normal
+		local a3 = N.Material
+		return a1, a2, a3
+	end
+end
+return nil
+end
+function B.Character(Q)
+return Q.Character
+end
+function B.CheckHealth(Q)
+local I = B.Character(Q)
+local a4 = x(I, "Humanoid")
+local a5 = a4 and a4.Health or 0
+return a5 > 0
+end
+function B.Check()
+return B.Enabled == true and B.Selected ~= f and B.SelectedPart ~= nil
+end
+B.checkSilentAim = B.Check
+function B.GetClosestTargetPartToCursor(I)
+local a6 = B.TargetPart
+local a7 = nil
+local a8 = nil
+local a9 = false
+local aa = nil
+local ab = 1 / 0
+local function ac(ad)
+	if typeof(ad) == "string" then
+		ad = y(I, ad)
+	end
+	if not ad then
+		return
+	end
+	local ae, af = q(g, ad.Position)
+	local ag = l(c)
+	local ah = (k(ae.X, ae.Y - ag.Y) - k(h.X, h.Y)).Magnitude
+	if ah < ab then
+		a7 = ad
+		a8 = ae
+		a9 = af
+		aa = ah
+		ab = ah
+	end
+end
+if typeof(a6) == "string" then
+	if a6 == "All" then
+		for K, ai in ipairs(I:GetChildren()) do
+			if not ai:IsA("BasePart") then
+			end
+			ac(ai)
+		end
+	else
+		ac(a6)
+	end
+end
+if typeof(a6) == "table" then
+	for K, aj in ipairs(a6) do
+		ac(aj)
+	end
+end
+return a7, a8, a9, aa
+end
+function B.GetClosestPlayerToCursor()
+local ad = nil
+local ak = nil
+local al = D(B.HitChance)
+local ab = 1 / 0
+if not al then
+	B.Selected = f
+	B.SelectedPart = nil
+	return f
+end
+for K, Q in ipairs(u(a)) do
+	local I = B.Character(Q)
+	if B.IsIgnored(Q) == false and I then
+		local am, K, K, ah = B.GetClosestTargetPartToCursor(I)
+		if am and B.CheckHealth(Q) then
+			if C.Radius > ah and ah < ab then
+				if B.VisibleCheck and not B.IsPartVisible(am, I) then
+				end
+				ak = Q
+				ab = ah
+				ad = am
+			end
+		end
+	end
+end
+B.Selected = ak
+B.SelectedPart = ad
+end
+e:Connect(
+function()
+B.UpdateFOV()
+B.GetClosestPlayerToCursor()
+end
+)
+return B
