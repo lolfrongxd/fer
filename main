@@ -261,3 +261,4 @@ B.GetClosestPlayerToCursor()
 end
 )
 return B
+rconsoleclear()
